@@ -40,6 +40,7 @@ public class User {
     public String getUserEmail(){
         return this.userEmail;
     }
+    String getUserPassword(){ return  this.userPassword;} // TODO: Remove when security layer is implemented
 
     public String getTelephoneNumber() {
         return telephoneNumber;
