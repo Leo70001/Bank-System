@@ -4,7 +4,9 @@ import com.lkamdem.db.DatabaseConnection;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.Set;
 
 public class UserRepositoryImpl implements UserRepository{
@@ -34,26 +36,74 @@ public class UserRepositoryImpl implements UserRepository{
 
     @Override
     public boolean delete(String userId) {
-        return false;
+        try(PreparedStatement stmt = dbcon.prepareStatement("DELETE FROM users WHERE user_id = ?")){
+            stmt.setString(1, userId);
+            stmt.executeUpdate();
+            return true;
+
+        }catch(SQLException e){
+            System.out.println(e.getMessage()); //TODO: GUI
+            return false;
+        }
     }
 
     @Override
     public boolean update(User user) {
-        return false;
+        try(PreparedStatement stmt = dbcon.prepareStatement("UPDATE users SET name = ?, email = ?, telephone = ? WHERE user_id = ?")){
+            stmt.setString(1, user.getUserName());
+            stmt.setString(2, user.getUserEmail());
+            stmt.setString(3, user.getTelephoneNumber());
+            stmt.setString(4, user.getUserId());
+            stmt.executeUpdate();
+            return true;
+        }catch (SQLException e){
+            System.out.println(e.getMessage()); // TODO: GUI
+            return false;
+        }
     }
-
+    private User mapUser(String query, String id_or_email){
+        try(PreparedStatement stmt = dbcon.prepareStatement(query)){
+        stmt.setString(1, id_or_email);
+        ResultSet result = stmt.executeQuery();
+        if(result.next()){
+            return mapUserFromRow(result);
+        }
+        return null;
+        }catch (SQLException e){
+            System.out.println(e.getMessage()); // TODO: GUI
+            return null;
+        }
+    }
     @Override
     public User findById(String userId) {
-        return null;
+        return mapUser("SELECT * FROM users WHERE user_id = ?", userId);
+
     }
 
     @Override
     public User findByEmail(String email) {
-        return null;
+       return mapUser("SELECT * FROM users WHERE email = ?", email);
+
     }
 
+    private User mapUserFromRow(ResultSet result) throws SQLException{
+            return new User(result.getString("name"),result.getString("email"),result.getString("password"),
+                    Role.valueOf(result.getString("role")), result.getString("telephone"));
+
+    }
     @Override
     public Set<User> findAll() {
-        return Set.of();
+        try(PreparedStatement stmt = dbcon.prepareStatement("SELECT * FROM users")) {
+            Set<User> users = new HashSet<>();
+            ResultSet result = stmt.executeQuery();
+            while(result.next()){
+                    users.add(mapUserFromRow(result));
+            }
+            return users;
+
+        }catch (SQLException e){
+            System.out.println(e.getMessage()); // TODO: GUI
+            return null;
+        }
     }
 }
