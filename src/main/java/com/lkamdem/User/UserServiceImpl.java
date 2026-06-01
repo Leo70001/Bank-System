@@ -1,8 +1,27 @@
 package com.lkamdem.User;
 
 public class UserServiceImpl implements UserService{
+    private final UserRepository userRepository;
+
+    public UserServiceImpl(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
     @Override
     public User register(String userId, String email, String password) {
+        User newUser = userRepository.findById(userId);
+        if(newUser != null){
+            User newUser2 = userRepository.findByEmail(email);
+            if(newUser2 == null){
+                newUser.setInitialPassword(password); // TODO: Once security completed encrypt password
+                newUser.setUserEmail(email);
+                userRepository.updateProfile(newUser);
+                userRepository.updatePassword(userId, password);
+                return newUser;
+            }
+            return null;
+
+        }
         return null;
     }
 

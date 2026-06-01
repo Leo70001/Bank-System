@@ -16,15 +16,14 @@ public class User {
     private String telephoneNumber;
     private Set<Account> accounts;
 
-    public User(String userName, String userEmail, String userPassword, String telephoneNumber) {
-        this(userName, userEmail, userPassword, Role.CUSTOMER, telephoneNumber);
+    public User(String userName, String userEmail, String telephoneNumber) {
+        this(userName, userEmail, Role.CUSTOMER, telephoneNumber);
     }
 
-    public User(String userName, String userEmail, String userPassword,  Role userRole, String telephoneNumber) {
+    public User(String userName, String userEmail, Role userRole, String telephoneNumber) {
         this.userId = UUID.randomUUID().toString();
         this.userName = userName;
         this.userEmail = userEmail;
-        this.userPassword = userPassword;
         this.userRole = userRole;
         this.telephoneNumber = telephoneNumber;
         this.accounts = new HashSet<>();
@@ -68,12 +67,20 @@ public class User {
 
 
     public boolean verifyPassword(String password){
-        return this.userPassword.equals(password);
+
+        return userPassword != null && this.userPassword.equals(password);
     }
 
     public boolean changeUserPassword(String oldPassword, String newPassword){
-        if(userPassword.equals(oldPassword)){
+        if(userPassword != null && userPassword.equals(oldPassword)){
             this.userPassword = newPassword;
+            return true;
+        }
+        return false;
+    }
+    public boolean setInitialPassword(String userPassword){
+        if(this.userPassword == null){
+            this.userPassword = userPassword;
             return true;
         }
         return false;

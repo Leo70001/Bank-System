@@ -48,7 +48,7 @@ public class UserRepositoryImpl implements UserRepository{
     }
 
     @Override
-    public boolean update(User user) {
+    public boolean updateProfile(User user) {
         try(PreparedStatement stmt = dbcon.prepareStatement("UPDATE users SET name = ?, email = ?, telephone = ? WHERE user_id = ?")){
             stmt.setString(1, user.getUserName());
             stmt.setString(2, user.getUserEmail());
@@ -60,6 +60,20 @@ public class UserRepositoryImpl implements UserRepository{
             System.out.println(e.getMessage()); // TODO: GUI
             return false;
         }
+    }
+
+    @Override
+    public boolean updatePassword(String userId, String password){
+        try(PreparedStatement stmt = dbcon.prepareStatement("UPDATE users SET password = ? WHERE user_id = ?")){
+            stmt.setString(1,password);
+            stmt.setString(2, userId);
+            stmt.executeUpdate();
+            return true;
+        }catch (SQLException e){
+            System.out.println(e.getMessage()); //TODO: when GUI
+            return false;
+        }
+
     }
     private User mapUser(String query, String id_or_email){
         try(PreparedStatement stmt = dbcon.prepareStatement(query)){
@@ -87,8 +101,10 @@ public class UserRepositoryImpl implements UserRepository{
     }
 
     private User mapUserFromRow(ResultSet result) throws SQLException{
-            return new User(result.getString("name"),result.getString("email"),result.getString("password"),
+            User user =  new User(result.getString("name"),result.getString("email"),
                     Role.valueOf(result.getString("role")), result.getString("telephone"));
+            user.setInitialPassword(result.getString("password"));
+            return user;
 
     }
     @Override
@@ -107,3 +123,16 @@ public class UserRepositoryImpl implements UserRepository{
         }
     }
 }
+
+/**
+ * DESIGN DECISIONS:
+ * - Implements UserRepository interface for abstraction
+ * - DatabaseConnection Singleton for single db connection
+ * - PreparedStatement for SQL injection prevention
+ * - try-with-resources for automatic resource cleanup
+ * - mapUserFromRow() helper to avoid code duplication (DRY principle)
+ * - mapUser() helper abstracts query execution for findById/findByEmail
+ * - Role.valueOf() to convert String back to enum
+ * - Returns null when user not found (caller's responsibility to handle)
+ * - TODO comments for replacing System.out.println with proper logging
+ */
